@@ -94,16 +94,14 @@ pipeline {
 	    }
 	}
 	// // Publish the built war file to Nexus
-	// stage('Publish to Nexus') {
-	//   steps {
-	//     dir('openshift-tasks') {
-	//       echo "Publish to Nexus"
-
-	//       // TBD: Publish to Nexus
-
-	//     }
-    //   }
-	// }
+	stage('Publish to Nexus') {
+	    steps {
+		dir('openshift-tasks') {
+		    echo "Publish to Nexus"
+		    sh "${mvnCmd} deploy -DskipTests=true -DaltDeploymentRepository=nexus::default::http://homework-nexus.gpte-hw-cicd.svc.cluster.local:8081/repository/releases"
+		}
+	    }
+	}
     // // Build the OpenShift Image in OpenShift and tag it.
 	// stage('Build and Tag OpenShift Image') {
 	    //   steps {
