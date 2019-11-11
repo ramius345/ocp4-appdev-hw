@@ -82,21 +82,17 @@ pipeline {
 		}
 	    }
 	}
-	// // Using Maven call SonarQube for Code Analysis
-	// stage('Code Analysis') {
-	//   steps {
-	//     dir('openshift-tasks') {
-	//       script {
-	//         echo "Running Code Analysis"
-
-	//         // TBD: Execute Sonarqube Tests
-	//         //      Your project name should be "${GUID}-${JOB_BASE_NAME}-${devTag}"
-	//         //      Your project version should be ${devTag}
-
-	//       }
-	//     }
-	//   }
-	// }
+	// Using Maven call SonarQube for Code Analysis
+	stage('Code Analysis') {
+	    steps {
+		dir('openshift-tasks') {
+		    script {
+			echo "Running Code Analysis"
+			sh "${mvnCmd} sonar:sonar -Dsonar.host.url=http://homework-sonarqube.apps.shared.na.openshift.opentlc.com -Dsonar.projectName=${GUID}-${JOB_BASE_NAME}-${devTag} -Dsonar.projectVersion=${devTag}"
+		    }
+		}
+	    }
+	}
 	// // Publish the built war file to Nexus
 	// stage('Publish to Nexus') {
 	//   steps {
