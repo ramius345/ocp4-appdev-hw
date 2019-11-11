@@ -110,7 +110,7 @@ pipeline {
 		    script {
 			openshift.withCluster() {
 			    openshift.withProject("${devProject}") {
-				openshift.selector("bc", "${GUID}-tasks").startBuild("--from-file=./target/openshift-tasks.war", "--wait=true")
+				openshift.selector("bc", "tasks").startBuild("--from-file=./target/openshift-tasks.war", "--wait=true")
 				openshift.tag("${GUID}-tasks:latest", "${imageName}:${devTag}")
 			    }
 			}
