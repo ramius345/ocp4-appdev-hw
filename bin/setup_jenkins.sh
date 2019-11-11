@@ -59,6 +59,7 @@ items:
       type: \"Git\"
       git:
         uri: \"https://homework-gitea.apps.shared.na.openshift.opentlc.com/tpetersh-redhat.com/ocp4-appdev-hw.git\"
+      contextDir: openshift-tasks
     strategy:
       type: \"JenkinsPipeline\"
       jenkinsPipelineStrategy:
