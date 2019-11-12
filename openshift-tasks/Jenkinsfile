@@ -177,32 +177,74 @@ pipeline {
 	    }
 	}
 
-    // // Blue/Green Deployment into Production
-	// // -------------------------------------
-	// stage('Blue/Green Production Deployment') {
-	    //   steps {
-	    //     script {
+	// Blue/Green Deployment into Production
+	// -------------------------------------
+	stage('Blue/Green Production Deployment') {
+	    steps {
+		echo "Blue/Green Deployment"
+	        script {
 
-	    //       // TBD: Determine which application is active
-	//       //      Set Image, Set VERSION
-	//       //      (Re-)create ConfigMap
-	//       //      Deploy into the other application
-	//       //      Make sure the application is running and ready before proceeding
+	            // TBD: Determine which application is active
+		    //      Set Image, Set VERSION
+		    //      (Re-)create ConfigMap
+		    //      Deploy into the other application
+		    //      Make sure the application is running and ready before proceeding
+		    openshift.withCluster() {
+			openshift.withProject("${prodProject}") {
+			    activeApp = openshift.selector("route", "tasks").object().spec.to.name
+			    if (activeApp == "tasks-green") {
+				destApp = "tasks-blue"
+			    }
+			    echo "Active Application:      " + activeApp
+			    echo "Destination Application: " + destApp
 
-	//     }
-    //   }
-	// }
+			    // Update the Image on the Production Deployment Config
+			    def dc = openshift.selector("dc/${destApp}").object()
 
-    // stage('Switch over to new Version') {
-	//   steps{
-	    //     echo "Switching Production application to ${destApp}."
-	//     script {
-	    //       // TBD: Execute switch
-	//       //      Hint: sleep 5 seconds after the switch
-	//       //            for the route to be fully switched over
+			    // OpenShift 4
+			    dc.spec.template.spec.containers[0].image="image-registry.openshift-image-registry.svc:5000/${devProject}/${imageName}:${prodTag}"
+			    openshift.apply(dc)
 
-	//     }
-    //   }
-	// }
-}
+			    // Update Config Map in change config files changed in the source
+			    openshift.selector("configmap", "${destApp}-config").delete()
+			    def configmap = openshift.create("configmap", "${destApp}-config", "--from-file=./configuration/application-users.properties", "--from-file=./configuration/application-roles.properties" )
+
+			    // Deploy the inactive application.
+			    openshift.selector("dc", "${destApp}").rollout().latest();
+
+			    // Wait for application to be deployed
+			    def dc_prod = openshift.selector("dc", "${destApp}").object()
+			    def dc_version = dc_prod.status.latestVersion
+			    def rc_prod = openshift.selector("rc", "${destApp}-${dc_version}").object()
+			    echo "Waiting for ${destApp} to be ready"
+			    while (rc_prod.spec.replicas != rc_prod.status.readyReplicas) {
+				sleep 5
+				rc_prod = openshift.selector("rc", "${destApp}-${dc_version}").object()
+			    }
+			}
+		    }
+		}
+	    }
+	}
+
+	stage('Switch over to new Version') {
+	    steps{
+	        echo "Switching Production application to ${destApp}."
+		script {
+	            // TBD: Execute switch
+		    //      Hint: sleep 5 seconds after the switch
+		    //            for the route to be fully switched over
+		    openshift.withCluster() {
+			openshift.withProject("${prodProject}") {
+			    def route = openshift.selector("route/tasks").object()
+			    route.spec.to.name="${destApp}"
+			    openshift.apply(route)
+			}
+		    }
+
+		    sleep 5
+		}
+	    }
+	}
+    }
 }
