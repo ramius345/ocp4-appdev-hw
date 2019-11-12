@@ -8,7 +8,7 @@ spec:
   output:
     to:
       kind: ImageStreamTag
-      name: e1c5-tasks:latest
+      name: GUID-tasks:latest
   postCommit: {}
   resources: {}
   runPolicy: Serial
@@ -19,7 +19,7 @@ spec:
     sourceStrategy:
       from:
         kind: ImageStreamTag
-        name: jboss-eap71-openshift:1.4
+        name: jboss-eap72-openshift:1.0
         namespace: openshift
     type: Source
   successfulBuildsHistoryLimit: 5

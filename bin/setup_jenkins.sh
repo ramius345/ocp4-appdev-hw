@@ -15,15 +15,14 @@ echo "Setting up Jenkins in project ${GUID}-jenkins from Git Repo ${REPO} for Cl
 # Set up Jenkins with sufficient resources
 # DO NOT FORGET TO PASS '-n ${GUID}-jenkins to ALL commands!!'
 # You do not want to set up things in the wrong project.
-oc new-project ${GUID}-jenkins --display-name "${GUID} Shared Jenkins"
-
+oc project $GUID-jenkins
 oc new-app jenkins-persistent --param ENABLE_OAUTH=false --param MEMORY_LIMIT=2Gi --param VOLUME_CAPACITY=4Gi --param DISABLE_ADMINISTRATIVE_MONITORS=true
 
 oc set resources dc jenkins --limits=memory=2Gi,cpu=2 --requests=memory=1Gi,cpu=500m -n ${GUID}-jenkins
 
 sleep 5
 
-oc expose dc jenkins -n ${GUID}-jenkins
+oc expose svc jenkins -n ${GUID}-jenkins
 
 # Create custom agent container image with skopeo.
 # Build config must be called 'jenkins-agent-appdev' for the test below to succeed
@@ -76,29 +75,29 @@ metadata: []" | oc create -f - -n ${GUID}-jenkins
 
 oc set build-secret --source bc/tasks-pipeline gitea-secret -n ${GUID}-jenkins
 
+
 # ========================================
 # No changes are necessary below this line
 # Make sure that Jenkins is fully up and running before proceeding!
-
-# while : ; do
-#   echo "Checking if Jenkins is Ready..."
-#   AVAILABLE_REPLICAS=$(oc get dc jenkins -n ${GUID}-jenkins -o=jsonpath='{.status.availableReplicas}')
-#   if [[ "$AVAILABLE_REPLICAS" == "1" ]]; then
-#     echo "...Yes. Jenkins is ready."
-#     break
-#   fi
-#   echo "...no. Sleeping 10 seconds."
-#   sleep 10
-# done
+while : ; do
+  echo "Checking if Jenkins is Ready..."
+  AVAILABLE_REPLICAS=$(oc get dc jenkins -n ${GUID}-jenkins -o=jsonpath='{.status.availableReplicas}')
+  if [[ "$AVAILABLE_REPLICAS" == "1" ]]; then
+    echo "...Yes. Jenkins is ready."
+    break
+  fi
+  echo "...no. Sleeping 10 seconds."
+  sleep 10
+done
 
 # Make sure that Jenkins Agent Build Pod has finished building
-# while : ; do
-#   echo "Checking if Jenkins Agent Build Pod has finished building..."
-#   AVAILABLE_REPLICAS=$(oc get pod jenkins-agent-appdev-1-build -n ${GUID}-jenkins -o=jsonpath='{.status.phase}')
-#   if [[ "$AVAILABLE_REPLICAS" == "Succeeded" ]]; then
-#     echo "...Yes. Jenkins Agent Build Pod has finished."
-#     break
-#   fi
-#   echo "...no. Sleeping 10 seconds."
-#   sleep 10
-# done
+while : ; do
+  echo "Checking if Jenkins Agent Build Pod has finished building..."
+  AVAILABLE_REPLICAS=$(oc get pod jenkins-agent-appdev-1-build -n ${GUID}-jenkins -o=jsonpath='{.status.phase}')
+  if [[ "$AVAILABLE_REPLICAS" == "Succeeded" ]]; then
+    echo "...Yes. Jenkins Agent Build Pod has finished."
+    break
+  fi
+  echo "...no. Sleeping 10 seconds."
+  sleep 10
+done

@@ -14,10 +14,10 @@ oc policy add-role-to-user edit system:serviceaccount:${GUID}-jenkins:jenkins -n
 
 # Set up Dev Application
 oc apply -f manifests/tasks-cm-dev.yaml -n ${GUID}-tasks-dev
-oc apply -f manifests/tasks-dc-dev.yaml -n ${GUID}-tasks-dev
+sed  "s/GUID/${GUID}/g" manifests/tasks-dc-dev.yaml | oc apply -n ${GUID}-tasks-dev -f - 
 oc apply -f manifests/tasks-svc-dev.yaml -n ${GUID}-tasks-dev
 oc apply -f manifests/tasks-route-dev.yaml -n ${GUID}-tasks-dev
 
 # Set up Dev Build Config
-oc apply -f manifests/tasks-is-dev.yaml -n ${GUID}-tasks-dev
-oc apply -f manifests/tasks-bc-dev.yaml -n ${GUID}-tasks-dev
+sed "s/GUID/${GUID}/g" manifests/tasks-is-dev.yaml | oc apply -n ${GUID}-tasks-dev -f - 
+sed "s/GUID/${GUID}/g" manifests/tasks-bc-dev.yaml | oc apply -n ${GUID}-tasks-dev -f -  
