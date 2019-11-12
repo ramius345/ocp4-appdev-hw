@@ -15,12 +15,12 @@ oc policy add-role-to-user edit system:serviceaccount:${GUID}-jenkins:jenkins -n
 
 # Set up Blue Application
 oc apply -f manifests/tasks-cm-blue.yaml -n ${GUID}-tasks-prod
-oc apply -f manifests/tasks-dc-blue.yaml -n ${GUID}-tasks-prod
+sed  "s/GUID/${GUID}/g" manifests/tasks-dc-blue.yaml | oc apply -n ${GUID}-tasks-prod -f -
 oc apply -f manifests/tasks-svc-blue.yaml -n ${GUID}-tasks-prod
 
 # Set up Green Application
 oc apply -f manifests/tasks-cm-green.yaml -n ${GUID}-tasks-prod
-oc apply -f manifests/tasks-dc-green.yaml -n ${GUID}-tasks-prod
+sed  "s/GUID/${GUID}/g" manifests/tasks-dc-green.yaml | oc apply -n ${GUID}-tasks-prod -f -
 oc apply -f manifests/tasks-svc-green.yaml -n ${GUID}-tasks-prod
 
 # Expose Green service as route -> Force Green -> Blue deployment on first run
