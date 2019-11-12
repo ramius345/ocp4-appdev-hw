@@ -159,19 +159,23 @@ pipeline {
 	    }
 	}
 
-	// // Copy Image to Nexus Container Registry
-	// stage('Copy Image to Nexus Container Registry') {
-	    //   steps {
-	    //     echo "Copy image to Nexus Container Registry"
-	//     script {
+	// Copy Image to Nexus Container Registry
+	stage('Copy Image to Nexus Container Registry') {
+	    steps {
+	        echo "Copy image to Nexus Container Registry"
+		script {
+	            // TBD: Copy image to Nexus container registry
+		    sh "skopeo copy --src-tls-verify=false --dest-tls-verify=false --src-creds openshift:\$(oc whoami -t) --dest-creds admin:redhat docker://image-registry.openshift-image-registry.svc.cluster.local:5000/${devProject}/${imageName}:${devTag} docker://homework-nexus-registry.apps.shared.na.openshift.opentlc.com:5000/${imageName}:${devTag}"
 
-	    //       // TBD: Copy image to Nexus container registry
-
-	//       // TBD: Tag the built image with the production tag.
-
-	//     }
-    //   }
-	// }
+		    // TBD: Tag the built image with the production tag.
+		    openshift.withCluster() {
+			openshift.withProject("${prodProject}") {
+			    openshift.tag("${devProject}/${imageName}:${devTag}", "${devProject}/${imageName}:${prodTag}")
+			}
+		    }
+		}
+	    }
+	}
 
     // // Blue/Green Deployment into Production
 	// // -------------------------------------
